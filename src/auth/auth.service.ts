@@ -30,6 +30,7 @@ export class AuthService {
     try {
       const user = await this.prisma.users.findFirst({
         where: { OR: [{ email }, { phoneNumber: email }] },
+        include: { techncian: true },
       });
 
       if (user) {
@@ -63,10 +64,15 @@ export class AuthService {
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
         },
       });
+      delete user.id;
       delete user.password;
-
+      delete user.techncian[0].nationalId;
+      delete user.techncian[0].userId;
+      const tech = user.techncian[0] ? user.techncian[0] : [];
+      delete user.techncian;
       return {
         message: 'loged in successfully',
+        ...tech,
         ...user,
         access_token: this.jwtServise.sign({
           user: { userId: user.id, role: user.role, tokenId: token.id },
@@ -91,6 +97,8 @@ export class AuthService {
       const user = await this.prisma.users.create({
         data: userDto,
       });
+      delete user.id;
+      delete user.password;
       return { ...user, message: 'user has been created successfully' };
     } catch (err) {
       return err;
@@ -124,7 +132,7 @@ export class AuthService {
         },
       });
       const url = await this.uploadImage(images[0].buffer);
-      delete user.password;
+
       const tech = await this.prisma.techncian.create({
         data: {
           fullName: techDto.fullName,
@@ -134,6 +142,9 @@ export class AuthService {
           idImage: url,
         },
       });
+      delete user.password;
+      delete user.id;
+      delete tech.nationalId;
       return {
         ...user,
         ...tech,

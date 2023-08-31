@@ -50,7 +50,7 @@ export class CreateTechDto {
   nationalId: string;
 
   @IsString()
-  @MaxLength(20)
+  @MaxLength(40)
   @IsNotEmpty()
   fullName: string;
 
