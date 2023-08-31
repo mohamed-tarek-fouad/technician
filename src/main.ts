@@ -9,6 +9,7 @@ async function bootstrap() {
     index: false,
     prefix: '/uploads',
   });
+  app.setGlobalPrefix('/api');
   app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({

@@ -32,26 +32,19 @@ export class AuthController {
     return this.authService.clientRegister(createUserDto);
   }
   @UseInterceptors(
-    FilesInterceptor('images', 1, {
+    FilesInterceptor('nationalIdImage', 1, {
       preservePath: true,
       fileFilter(req, file, cb) {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|mp4|mov|avi|wmv)$/)) {
-          return cb(
-            new Error('Only image and video files are allowed!'),
-            false,
-          );
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
         }
         cb(null, true);
       },
     }),
   )
   @Post('tech/register')
-  register(
-    @Body() createUserDto: CreateUserDto,
-    techDto: CreateTechDto,
-    @UploadedFiles() images: any,
-  ) {
-    return this.authService.techRegister(createUserDto, techDto, images);
+  register(@Body() techDto: CreateTechDto, @UploadedFiles() images: any) {
+    return this.authService.techRegister(techDto, images);
   }
   @UseGuards(JwtAuthGuard)
   @Post('logout')

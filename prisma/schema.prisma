@@ -18,11 +18,11 @@ model Users {
   gender      Gender
   tokens      tokens[]
   role        UserRole    @default(user)
-  techncian   techncian[]
+  techncian   Techncian[]
 }
 
-model techncian {
-  nationalId String @id @map("_id") @db.ObjectId
+model Techncian {
+  nationalId String @id @map("_id")
   userId     String @db.ObjectId
   user       Users  @relation(fields: [userId], references: [id])
   fullName   String

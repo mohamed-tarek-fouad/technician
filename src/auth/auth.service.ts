@@ -96,24 +96,38 @@ export class AuthService {
       return err;
     }
   }
-  async techRegister(userDto: CreateUserDto, techDto: CreateTechDto, images) {
+  async techRegister(techDto: CreateTechDto, images) {
     try {
       const userExist = await this.prisma.users.findFirst({
         where: {
-          OR: [{ email: userDto.email }, { phoneNumber: userDto.phoneNumber }],
+          OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
         },
       });
       if (userExist) {
         throw new HttpException('user already exist', HttpStatus.BAD_REQUEST);
       }
       const saltOrRounds = 10;
-      userDto.password = await bcrypt.hash(userDto.password, saltOrRounds);
+      techDto.password = await bcrypt.hash(techDto.password, saltOrRounds);
       const user = await this.prisma.users.create({
-        data: userDto,
+        data: {
+          email: techDto.email,
+          gender: techDto.gender,
+          government: techDto.government,
+          password: techDto.password,
+          phoneNumber: techDto.phoneNumber,
+          username: techDto.username,
+        },
       });
       const url = images[0] ? await this.uploadImage(images[0].buffer) : null;
+      delete user.password;
       const tech = await this.prisma.techncian.create({
-        data: { ...techDto, userId: user.id, idImage: url },
+        data: {
+          fullName: techDto.fullName,
+          jobTitle: techDto.jobTitle,
+          nationalId: techDto.nationalId,
+          userId: user.id,
+          idImage: url,
+        },
       });
       return {
         ...user,
@@ -143,12 +157,12 @@ export class AuthService {
   }
   async logout(req) {
     try {
-      const user = await this.prisma.tokens.delete({
+      await this.prisma.tokens.delete({
         where: {
           id: req.user.tokenId,
         },
       });
-      return { ...user, message: 'loged out successfully' };
+      return { message: 'loged out successfully' };
     } catch (err) {
       return err;
     }
