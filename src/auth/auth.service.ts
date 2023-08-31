@@ -98,6 +98,11 @@ export class AuthService {
   }
   async techRegister(techDto: CreateTechDto, images) {
     try {
+      if (!images[0])
+        throw new HttpException(
+          'national Id image is required',
+          HttpStatus.BAD_REQUEST,
+        );
       const userExist = await this.prisma.users.findFirst({
         where: {
           OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
@@ -118,7 +123,7 @@ export class AuthService {
           username: techDto.username,
         },
       });
-      const url = images[0] ? await this.uploadImage(images[0].buffer) : null;
+      const url = await this.uploadImage(images[0].buffer);
       delete user.password;
       const tech = await this.prisma.techncian.create({
         data: {
