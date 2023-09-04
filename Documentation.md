@@ -1,8 +1,11 @@
 # Technecians 
 ## API Reference
 
+#### root uri
+```http
+ https://tech-i09o.onrender.com
+```
 #### Register Client
-
 ```http
   POST /api/auth/client/register
 ```
