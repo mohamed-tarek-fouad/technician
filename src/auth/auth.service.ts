@@ -83,76 +83,68 @@ export class AuthService {
     }
   }
   async clientRegister(userDto: CreateUserDto) {
-    try {
-      const userExist = await this.prisma.users.findFirst({
-        where: {
-          OR: [{ email: userDto.email }, { phoneNumber: userDto.phoneNumber }],
-        },
-      });
-      if (userExist) {
-        throw new HttpException('user already exist', HttpStatus.BAD_REQUEST);
-      }
-      const saltOrRounds = 10;
-      userDto.password = await bcrypt.hash(userDto.password, saltOrRounds);
-      const user = await this.prisma.users.create({
-        data: userDto,
-      });
-      delete user.id;
-      delete user.password;
-      return { ...user, message: 'user has been created successfully' };
-    } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    const userExist = await this.prisma.users.findFirst({
+      where: {
+        OR: [{ email: userDto.email }, { phoneNumber: userDto.phoneNumber }],
+      },
+    });
+    if (userExist) {
+      throw new HttpException('user already exist', HttpStatus.BAD_REQUEST);
     }
+    const saltOrRounds = 10;
+    userDto.password = await bcrypt.hash(userDto.password, saltOrRounds);
+    const user = await this.prisma.users.create({
+      data: userDto,
+    });
+    delete user.id;
+    delete user.password;
+    return { ...user, message: 'user has been created successfully' };
   }
   async techRegister(techDto: CreateTechDto, images) {
-    try {
-      if (!images[0])
-        throw new HttpException(
-          'national Id image is required',
-          HttpStatus.BAD_REQUEST,
-        );
-      const userExist = await this.prisma.users.findFirst({
-        where: {
-          OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
-        },
-      });
-      if (userExist) {
-        throw new HttpException('user already exist', HttpStatus.BAD_REQUEST);
-      }
-      const saltOrRounds = 10;
-      techDto.password = await bcrypt.hash(techDto.password, saltOrRounds);
-      const user = await this.prisma.users.create({
-        data: {
-          email: techDto.email,
-          gender: techDto.gender,
-          government: techDto.government,
-          password: techDto.password,
-          phoneNumber: techDto.phoneNumber,
-          username: techDto.username,
-        },
-      });
-      const url = await this.uploadImage(images[0].buffer);
-
-      const tech = await this.prisma.techncian.create({
-        data: {
-          fullName: techDto.fullName,
-          jobTitle: techDto.jobTitle,
-          nationalId: techDto.nationalId,
-          userId: user.id,
-          idImage: url,
-        },
-      });
-      delete user.password;
-      delete user.id;
-      delete tech.nationalId;
-      return {
-        ...user,
-        ...tech,
-        message: 'user has been created successfully',
-      };
-    } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    if (!images[0])
+      throw new HttpException(
+        'national Id image is required',
+        HttpStatus.BAD_REQUEST,
+      );
+    const userExist = await this.prisma.users.findFirst({
+      where: {
+        OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
+      },
+    });
+    if (userExist) {
+      throw new HttpException('user already exist', HttpStatus.BAD_REQUEST);
     }
+    const saltOrRounds = 10;
+    techDto.password = await bcrypt.hash(techDto.password, saltOrRounds);
+    const user = await this.prisma.users.create({
+      data: {
+        email: techDto.email,
+        gender: techDto.gender,
+        government: techDto.government,
+        password: techDto.password,
+        phoneNumber: techDto.phoneNumber,
+        username: techDto.username,
+      },
+    });
+    const url = await this.uploadImage(images[0].buffer);
+
+    const tech = await this.prisma.techncian.create({
+      data: {
+        fullName: techDto.fullName,
+        jobTitle: techDto.jobTitle,
+        nationalId: techDto.nationalId,
+        userId: user.id,
+        idImage: url,
+      },
+    });
+    delete user.password;
+    delete user.id;
+    delete tech.nationalId;
+    return {
+      ...user,
+      ...tech,
+      message: 'user has been created successfully',
+    };
   }
   async uploadImage(buffer: Buffer): Promise<string> {
     try {
@@ -168,7 +160,10 @@ export class AuthService {
           .end(buffer);
       });
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        `error in upload image ${err}`,
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
   async logout(req) {
