@@ -79,7 +79,7 @@ export class AuthService {
         }),
       };
     } catch (err) {
-      return err;
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
   async clientRegister(userDto: CreateUserDto) {
@@ -101,7 +101,7 @@ export class AuthService {
       delete user.password;
       return { ...user, message: 'user has been created successfully' };
     } catch (err) {
-      return err;
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
   async techRegister(techDto: CreateTechDto, images) {
@@ -151,7 +151,7 @@ export class AuthService {
         message: 'user has been created successfully',
       };
     } catch (err) {
-      return err;
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
   async uploadImage(buffer: Buffer): Promise<string> {
@@ -180,7 +180,7 @@ export class AuthService {
       });
       return { message: 'loged out successfully' };
     } catch (err) {
-      return err;
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -222,7 +222,7 @@ export class AuthService {
       });
       return { message: 'email sent successfully' };
     } catch (err) {
-      return err;
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
   async resetPassword(
@@ -258,7 +258,7 @@ export class AuthService {
       delete user.password;
       return { ...user, message: 'reset password successfully' };
     } catch (err) {
-      return err;
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
   async updateUser(id: string, updateUserDto: UpdateUserDto) {
