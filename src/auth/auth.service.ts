@@ -13,12 +13,16 @@ import { ResetPasswordDto } from './dtos/resetPassword.dto';
 import { v2 as cloudinary } from 'cloudinary';
 import { UpdateUserDto } from './dtos/updateUser.dto';
 import { CreateTechDto } from './dtos/createTech.dto';
+import { Twilio } from 'twilio';
+import { ConfigService } from '@nestjs/config';
+import { VerifyPhoneNumberDto } from './dtos/verifyPhoneNumber.dto';
 @Injectable()
 export class AuthService {
   constructor(
     private jwtServise: JwtService,
     private prisma: PrismaService,
     private mailerService: MailerService,
+    private config: ConfigService,
   ) {
     cloudinary.config({
       cloud_name: process.env.CLOUD_NAME,
@@ -32,7 +36,6 @@ export class AuthService {
         where: { OR: [{ email }, { phoneNumber: email }] },
         include: { techncian: true },
       });
-
       if (user) {
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {
@@ -64,10 +67,11 @@ export class AuthService {
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
         },
       });
+      console.log(user);
       delete user.id;
       delete user.password;
-      delete user.techncian[0].nationalId;
-      delete user.techncian[0].userId;
+      delete user.techncian[0]?.nationalId;
+      delete user.techncian[0]?.userId;
       const tech = user.techncian[0] ? user.techncian[0] : [];
       delete user.techncian;
       return {
@@ -96,9 +100,21 @@ export class AuthService {
     const user = await this.prisma.users.create({
       data: userDto,
     });
+    const token = await this.prisma.tokens.create({
+      data: {
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      },
+    });
     delete user.id;
     delete user.password;
-    return { ...user, message: 'user has been created successfully' };
+    return {
+      ...user,
+      access_token: this.jwtServise.sign({
+        user: { userId: user.id, role: user.role, tokenId: token.id },
+      }),
+      message: 'user has been created successfully',
+    };
   }
   async techRegister(techDto: CreateTechDto, images) {
     if (!images[0])
@@ -137,12 +153,21 @@ export class AuthService {
         idImage: url,
       },
     });
+    const token = await this.prisma.tokens.create({
+      data: {
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      },
+    });
     delete user.password;
     delete user.id;
     delete tech.nationalId;
     return {
       ...user,
       ...tech,
+      access_token: this.jwtServise.sign({
+        user: { userId: user.id, role: user.role, tokenId: token.id },
+      }),
       message: 'user has been created successfully',
     };
   }
@@ -179,64 +204,88 @@ export class AuthService {
     }
   }
 
-  async forgetPassword(forgetPasswordDto: ForgetPasswordDto) {
+  async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
     try {
-      const validateUser = await this.prisma.users.findUnique({
-        where: {
-          email: forgetPasswordDto.email,
-        },
+      const user = await this.prisma.users.findUnique({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
       });
-      if (!validateUser) {
-        throw new HttpException("email doesn't exist", HttpStatus.BAD_REQUEST);
+      if (!user) {
+        throw new HttpException(
+          `no user with this phoneNUmber `,
+          HttpStatus.BAD_REQUEST,
+        );
       }
+      const client = new Twilio(
+        this.config.get<string>('TWILIO_ACCOUNT_SID'),
+        this.config.get<string>('TWILIO_AUTHTOKEN'),
+      );
+      const fourDigits = Math.floor(Math.random() * 9000) + 1000;
 
-      const secret = process.env.ACCESS_SECRET + validateUser.password;
+      const secret = process.env.ACCESS_SECRET;
       const token = this.jwtServise.sign(
-        { email: forgetPasswordDto.email, id: validateUser.id },
+        { code: fourDigits },
         {
           secret,
           expiresIn: 60 * 15,
         },
       );
-
-      const url = `http://localhost:3001/auth/resetPassword/${validateUser.id}/${token}`;
-
-      await this.mailerService.sendMail({
-        to: forgetPasswordDto.email,
-        from: process.env.EMAIL_USER,
-        // from: '"Support Team" <support@example.com>', // override default from
-        subject: 'Reset Password Confirmation Email',
-        //template: "./templates/confirmation", // `.hbs` extension is appended automatically
-        context: {
-          // ✏️ filling curly brackets with content
-          name: validateUser.username,
-          url,
+      await this.prisma.users.update({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+        data: {
+          phoneNumberVerifiaction: token,
         },
-
-        text: url,
       });
-      return { message: 'email sent successfully' };
+      try {
+        await client.messages.create({
+          body: `Verification Code Is : ${fourDigits}`,
+          from: this.config.get<string>('TWILIO_NUMBER'),
+          to: user.phoneNumber,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      return { message: 'verification code sent successfully' };
     } catch (err) {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
-  async resetPassword(
-    resetPasswordDto: ResetPasswordDto,
-    id: string,
+
+  async verifyResetPassword(
+    verifyPhoneNumber: VerifyPhoneNumberDto,
     token: string,
   ) {
     try {
-      const validateUser = await this.prisma.users.findUnique({
-        where: {
-          id,
-        },
+      const user = await this.prisma.users.findUnique({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
       });
-      if (!validateUser) {
+      const secret = process.env.ACCESS_SECRET;
+      const payload = await this.jwtServise.verify(
+        user.phoneNumberVerifiaction,
+        {
+          secret,
+        },
+      );
+      if (payload.code != token) {
         throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
       }
-      const secret = process.env.ACCESS_SECRET + validateUser.password;
-      const payload = this.jwtServise.verify(token, { secret });
-      if (payload.id !== validateUser.id) {
+      return { message: 'valid numbers reset password now' };
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
+    try {
+      const user = await this.prisma.users.findFirst({
+        where: { phoneNumber: resetPasswordDto.phoneNumber },
+      });
+      const secret = process.env.ACCESS_SECRET;
+      const payload = await this.jwtServise.verify(
+        user.phoneNumberVerifiaction,
+        {
+          secret,
+        },
+      );
+      if (payload.code != token) {
         throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
       }
       const saltOrRounds = 10;
@@ -244,14 +293,14 @@ export class AuthService {
         resetPasswordDto.password,
         saltOrRounds,
       );
-      const user = await this.prisma.users.update({
-        where: { id },
+      const updatedUser = await this.prisma.users.update({
+        where: { phoneNumber: resetPasswordDto.phoneNumber },
         data: {
           password: resetPasswordDto.password,
         },
       });
       delete user.password;
-      return { ...user, message: 'reset password successfully' };
+      return { ...updatedUser, message: 'reset password successfully' };
     } catch (err) {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }

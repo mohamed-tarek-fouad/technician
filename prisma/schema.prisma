@@ -9,16 +9,17 @@ datasource db {
 }
 
 model Users {
-  id          String      @id @default(auto()) @map("_id") @db.ObjectId
-  username    String
-  email       String      @unique
-  password    String
-  phoneNumber String      @unique
-  government  String
-  gender      Gender
-  tokens      tokens[]
-  role        UserRole    @default(user)
-  techncian   Techncian[]
+  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
+  username                String
+  email                   String      @unique
+  password                String
+  phoneNumber             String      @unique
+  government              String
+  gender                  Gender
+  tokens                  tokens[]
+  role                    UserRole    @default(user)
+  techncian               Techncian[]
+  phoneNumberVerifiaction String?
 }
 
 model Techncian {

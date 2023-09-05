@@ -19,6 +19,7 @@ import { Patch } from '@nestjs/common';
 import { UpdateUserDto } from './dtos/updateUser.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreateTechDto } from './dtos/createTech.dto';
+import { VerifyPhoneNumberDto } from './dtos/verifyPhoneNumber.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -51,18 +52,25 @@ export class AuthController {
   logout(@Req() req) {
     return this.authService.logout(req);
   }
-  @Post('forgetPassword')
-  forgetPassword(@Body() forgetPasswordDto: ForgetPasswordDto) {
-    return this.authService.forgetPassword(forgetPasswordDto);
+  @Post('verifyPhoneNumber')
+  verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
+    return this.authService.verifyPhoneNumber(verifyPhoneNumber);
   }
-  @Post('resetPassword/:id/:token')
-  resetPassword(
-    @Body() resetPasswordDto: ResetPasswordDto,
-    @Param('id') id: string,
+  @Post('verifyResetPassword/:token')
+  verifyResetPassword(
+    verifyPhoneNumber: VerifyPhoneNumberDto,
     @Param('token') token: string,
   ) {
-    return this.authService.resetPassword(resetPasswordDto, id, token);
+    return this.authService.verifyResetPassword(verifyPhoneNumber, token);
   }
+  @Post(' resetPassword/:token')
+  resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+    @Param('token') token: string,
+  ) {
+    return this.authService.resetPassword(resetPasswordDto, token);
+  }
+
   @Patch(':id')
   updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.authService.updateUser(id, updateUserDto);

@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import {
   IsNotEmpty,
+  IsPhoneNumber,
   IsString,
   MaxLength,
   MinLength,
@@ -23,4 +24,7 @@ export class ResetPasswordDto {
   @MaxLength(20)
   @Validate(PasswordValidation, [passwordRequirement])
   password: string;
+  @IsPhoneNumber()
+  @IsNotEmpty()
+  phoneNumber: string;
 }
