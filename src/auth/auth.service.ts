@@ -67,7 +67,6 @@ export class AuthService {
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
         },
       });
-      console.log(user);
       delete user.id;
       delete user.password;
       delete user.techncian[0]?.nationalId;
@@ -204,128 +203,127 @@ export class AuthService {
     }
   }
 
-  async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
-    try {
-      const user = await this.prisma.users.findUnique({
-        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-      });
-      if (!user) {
-        throw new HttpException(
-          `no user with this phoneNUmber `,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      const client = new Twilio(
-        this.config.get<string>('TWILIO_ACCOUNT_SID'),
-        this.config.get<string>('TWILIO_AUTHTOKEN'),
-      );
-      const fourDigits = Math.floor(Math.random() * 9000) + 1000;
+  // async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
+  //   try {
+  //     const user = await this.prisma.users.findUnique({
+  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+  //     });
+  //     if (!user) {
+  //       throw new HttpException(
+  //         `no user with this phoneNUmber `,
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
+  //     const client = new Twilio(
+  //       this.config.get<string>('TWILIO_ACCOUNT_SID'),
+  //       this.config.get<string>('TWILIO_AUTHTOKEN'),
+  //     );
+  //     const fourDigits = Math.floor(Math.random() * 9000) + 1000;
 
-      const secret = process.env.ACCESS_SECRET;
-      const token = this.jwtServise.sign(
-        { code: fourDigits },
-        {
-          secret,
-          expiresIn: 60 * 15,
-        },
-      );
-      await this.prisma.users.update({
-        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-        data: {
-          phoneNumberVerifiaction: token,
-        },
-      });
-      try {
-        await client.messages.create({
-          body: `Verification Code Is : ${fourDigits}`,
-          from: this.config.get<string>('TWILIO_NUMBER'),
-          to: user.phoneNumber,
-        });
-      } catch (err) {
-        console.error(err);
-      }
-      return { message: 'verification code sent successfully' };
-    } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
-    }
-  }
+  //     const secret = process.env.ACCESS_SECRET;
+  //     const token = this.jwtServise.sign(
+  //       { code: fourDigits },
+  //       {
+  //         secret,
+  //         expiresIn: 60 * 15,
+  //       },
+  //     );
+  //     await this.prisma.users.update({
+  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+  //       data: {
+  //         phoneNumberVerifiaction: token,
+  //       },
+  //     });
+  //     try {
+  //       await client.messages.create({
+  //         body: `Verification Code Is : ${fourDigits}`,
+  //         from: this.config.get<string>('TWILIO_NUMBER'),
+  //         to: user.phoneNumber,
+  //       });
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //     return { message: 'verification code sent successfully' };
+  //   } catch (err) {
+  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
+  //   }
+  // }
 
-  async verifyResetPassword(
-    verifyPhoneNumber: VerifyPhoneNumberDto,
-    token: string,
-  ) {
-    try {
-      const user = await this.prisma.users.findUnique({
-        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-      });
-      const secret = process.env.ACCESS_SECRET;
-      const payload = await this.jwtServise.verify(
-        user.phoneNumberVerifiaction,
-        {
-          secret,
-        },
-      );
-      if (payload.code != token) {
-        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-      }
-      return { message: 'valid numbers reset password now' };
-    } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
-    }
-  }
-  async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
-    try {
-      const user = await this.prisma.users.findFirst({
-        where: { phoneNumber: resetPasswordDto.phoneNumber },
-      });
-      const secret = process.env.ACCESS_SECRET;
-      const payload = await this.jwtServise.verify(
-        user.phoneNumberVerifiaction,
-        {
-          secret,
-        },
-      );
-      if (payload.code != token) {
-        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-      }
-      const saltOrRounds = 10;
-      resetPasswordDto.password = await bcrypt.hash(
-        resetPasswordDto.password,
-        saltOrRounds,
-      );
-      const updatedUser = await this.prisma.users.update({
-        where: { phoneNumber: resetPasswordDto.phoneNumber },
-        data: {
-          password: resetPasswordDto.password,
-        },
-      });
-      delete user.password;
-      return { ...updatedUser, message: 'reset password successfully' };
-    } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
-    }
-  }
-  async updateUser(id: string, updateUserDto: UpdateUserDto) {
-    try {
-      const user = await this.prisma.users.findUnique({
-        where: {
-          id,
-        },
-      });
-      if (!user) {
-        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-      }
-      console.log(updateUserDto);
-      const updatedUser = await this.prisma.users.update({
-        where: { id },
-        data: updateUserDto,
-      });
-      delete updatedUser.password;
-      return { ...updatedUser, message: 'user updated successfully' };
-    } catch (err) {
-      return err;
-    }
-  }
+  // async verifyResetPassword(
+  //   verifyPhoneNumber: VerifyPhoneNumberDto,
+  //   token: string,
+  // ) {
+  //   try {
+  //     const user = await this.prisma.users.findUnique({
+  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+  //     });
+  //     const secret = process.env.ACCESS_SECRET;
+  //     const payload = await this.jwtServise.verify(
+  //       user.phoneNumberVerifiaction,
+  //       {
+  //         secret,
+  //       },
+  //     );
+  //     if (payload.code != token) {
+  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+  //     }
+  //     return { message: 'valid numbers reset password now' };
+  //   } catch (err) {
+  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
+  //   }
+  // }
+  // async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
+  //   try {
+  //     const user = await this.prisma.users.findFirst({
+  //       where: { phoneNumber: resetPasswordDto.phoneNumber },
+  //     });
+  //     const secret = process.env.ACCESS_SECRET;
+  //     const payload = await this.jwtServise.verify(
+  //       user.phoneNumberVerifiaction,
+  //       {
+  //         secret,
+  //       },
+  //     );
+  //     if (payload.code != token) {
+  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+  //     }
+  //     const saltOrRounds = 10;
+  //     resetPasswordDto.password = await bcrypt.hash(
+  //       resetPasswordDto.password,
+  //       saltOrRounds,
+  //     );
+  //     const updatedUser = await this.prisma.users.update({
+  //       where: { phoneNumber: resetPasswordDto.phoneNumber },
+  //       data: {
+  //         password: resetPasswordDto.password,
+  //       },
+  //     });
+  //     delete user.password;
+  //     return { ...updatedUser, message: 'reset password successfully' };
+  //   } catch (err) {
+  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
+  //   }
+  // }
+  // async updateUser(id: string, updateUserDto: UpdateUserDto) {
+  //   try {
+  //     const user = await this.prisma.users.findUnique({
+  //       where: {
+  //         id,
+  //       },
+  //     });
+  //     if (!user) {
+  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+  //     }
+  //     const updatedUser = await this.prisma.users.update({
+  //       where: { id },
+  //       data: updateUserDto,
+  //     });
+  //     delete updatedUser.password;
+  //     return { ...updatedUser, message: 'user updated successfully' };
+  //   } catch (err) {
+  //     return err;
+  //   }
+  // }
 
   @Cron(CronExpression.EVERY_HOUR)
   async deleteExpiredTokens() {
