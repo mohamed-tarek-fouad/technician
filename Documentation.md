@@ -3,7 +3,7 @@
 
 #### root uri
 ```http
- https://tech-i09o.onrender.com
+ https://tech-o6js.onrender.com/
 ```
 #### Register Client
 ```http
