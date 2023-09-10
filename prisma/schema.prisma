@@ -1,41 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
-  version  = "5.1.1"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Users {
-  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
+  id                      Int         @id @default(autoincrement())
   username                String
   email                   String      @unique
   password                String
   phoneNumber             String      @unique
   government              String
+  phoneNumberVerifiaction String?
   gender                  Gender
   tokens                  tokens[]
   role                    UserRole    @default(user)
   techncian               Techncian[]
-  phoneNumberVerifiaction String?
 }
 
 model Techncian {
-  nationalId String @id @map("_id")
-  userId     String @db.ObjectId
-  user       Users  @relation(fields: [userId], references: [id])
-  fullName   String
-  jobTitle   String
-  idImage    String
+  nationalId              String      @id     @map("_id")
+  user_id                 Int         @unique
+  fullName                String
+  jobTitle                String
+  idImage                 String
+  user                    Users       @relation(fields: [user_id], references: [id])
 }
 
 model tokens {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  expiresAt DateTime
-  user      Users    @relation(fields: [userId], references: [id])
+  id                      Int         @id @default(autoincrement())
+  user_id                 Int         @unique
+  expiresAt               DateTime
+  user                    Users       @relation(fields: [user_id], references: [id])
 }
 
 enum UserRole {

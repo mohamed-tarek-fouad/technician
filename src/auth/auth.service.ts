@@ -16,11 +16,12 @@ import { CreateTechDto } from './dtos/createTech.dto';
 import { Twilio } from 'twilio';
 import { ConfigService } from '@nestjs/config';
 import { VerifyPhoneNumberDto } from './dtos/verifyPhoneNumber.dto';
+import { DatabaseService } from 'src/database/database.service';
 @Injectable()
 export class AuthService {
   constructor(
     private jwtServise: JwtService,
-    private prisma: PrismaService,
+    private database: DatabaseService,
     private mailerService: MailerService,
     private config: ConfigService,
   ) {
@@ -32,7 +33,7 @@ export class AuthService {
   }
   async validateUser(email: string, password: string) {
     try {
-      const user = await this.prisma.users.findFirst({
+      const user = await this.database.users.findFirst({
         where: { OR: [{ email }, { phoneNumber: email }] },
         include: { techncian: true },
       });
@@ -47,9 +48,9 @@ export class AuthService {
       return err;
     }
   }
-  async validateToken(id: string) {
+  async validateToken(id: number) {
     try {
-      const token = await this.prisma.tokens.findUnique({
+      const token = await this.database.tokens.findUnique({
         where: {
           id,
         },
@@ -61,9 +62,9 @@ export class AuthService {
   }
   async login(user: any): Promise<any> {
     try {
-      const token = await this.prisma.tokens.create({
+      const token = await this.database.tokens.create({
         data: {
-          userId: user.id,
+          user_id: user.id,
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
         },
       });
@@ -86,7 +87,7 @@ export class AuthService {
     }
   }
   async clientRegister(userDto: CreateUserDto) {
-    const userExist = await this.prisma.users.findFirst({
+    const userExist = await this.database.users.findFirst({
       where: {
         OR: [{ email: userDto.email }, { phoneNumber: userDto.phoneNumber }],
       },
@@ -96,12 +97,12 @@ export class AuthService {
     }
     const saltOrRounds = 10;
     userDto.password = await bcrypt.hash(userDto.password, saltOrRounds);
-    const user = await this.prisma.users.create({
+    const user = await this.database.users.create({
       data: userDto,
     });
-    const token = await this.prisma.tokens.create({
+    const token = await this.database.tokens.create({
       data: {
-        userId: user.id,
+        user_id: user.id,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
@@ -121,7 +122,7 @@ export class AuthService {
         'national Id image is required',
         HttpStatus.BAD_REQUEST,
       );
-    const userExist = await this.prisma.users.findFirst({
+    const userExist = await this.database.users.findFirst({
       where: {
         OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
       },
@@ -131,7 +132,7 @@ export class AuthService {
     }
     const saltOrRounds = 10;
     techDto.password = await bcrypt.hash(techDto.password, saltOrRounds);
-    const user = await this.prisma.users.create({
+    const user = await this.database.users.create({
       data: {
         email: techDto.email,
         gender: techDto.gender,
@@ -143,18 +144,18 @@ export class AuthService {
     });
     const url = await this.uploadImage(images[0].buffer);
 
-    const tech = await this.prisma.techncian.create({
+    const tech = await this.database.techncian.create({
       data: {
         fullName: techDto.fullName,
         jobTitle: techDto.jobTitle,
         nationalId: techDto.nationalId,
-        userId: user.id,
+        user_id: user.id,
         idImage: url,
       },
     });
-    const token = await this.prisma.tokens.create({
+    const token = await this.database.tokens.create({
       data: {
-        userId: user.id,
+        user_id: user.id,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
@@ -192,7 +193,7 @@ export class AuthService {
   }
   async logout(req) {
     try {
-      await this.prisma.tokens.delete({
+      await this.database.tokens.delete({
         where: {
           id: req.user.tokenId,
         },
@@ -205,7 +206,7 @@ export class AuthService {
 
   // async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
   //   try {
-  //     const user = await this.prisma.users.findUnique({
+  //     const user = await this.database.users.findUnique({
   //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
   //     });
   //     if (!user) {
@@ -228,7 +229,7 @@ export class AuthService {
   //         expiresIn: 60 * 15,
   //       },
   //     );
-  //     await this.prisma.users.update({
+  //     await this.database.users.update({
   //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
   //       data: {
   //         phoneNumberVerifiaction: token,
@@ -254,7 +255,7 @@ export class AuthService {
   //   token: string,
   // ) {
   //   try {
-  //     const user = await this.prisma.users.findUnique({
+  //     const user = await this.database.users.findUnique({
   //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
   //     });
   //     const secret = process.env.ACCESS_SECRET;
@@ -274,7 +275,7 @@ export class AuthService {
   // }
   // async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
   //   try {
-  //     const user = await this.prisma.users.findFirst({
+  //     const user = await this.database.users.findFirst({
   //       where: { phoneNumber: resetPasswordDto.phoneNumber },
   //     });
   //     const secret = process.env.ACCESS_SECRET;
@@ -292,7 +293,7 @@ export class AuthService {
   //       resetPasswordDto.password,
   //       saltOrRounds,
   //     );
-  //     const updatedUser = await this.prisma.users.update({
+  //     const updatedUser = await this.database.users.update({
   //       where: { phoneNumber: resetPasswordDto.phoneNumber },
   //       data: {
   //         password: resetPasswordDto.password,
@@ -306,7 +307,7 @@ export class AuthService {
   // }
   // async updateUser(id: string, updateUserDto: UpdateUserDto) {
   //   try {
-  //     const user = await this.prisma.users.findUnique({
+  //     const user = await this.database.users.findUnique({
   //       where: {
   //         id,
   //       },
@@ -314,7 +315,7 @@ export class AuthService {
   //     if (!user) {
   //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
   //     }
-  //     const updatedUser = await this.prisma.users.update({
+  //     const updatedUser = await this.database.users.update({
   //       where: { id },
   //       data: updateUserDto,
   //     });
@@ -329,7 +330,7 @@ export class AuthService {
   async deleteExpiredTokens() {
     try {
       console.log('Checking for expired tokens...');
-      const expiredTokens = await this.prisma.tokens.findMany({
+      const expiredTokens = await this.database.tokens.findMany({
         where: {
           expiresAt: {
             lte: new Date(),
@@ -339,7 +340,7 @@ export class AuthService {
       if (expiredTokens.length > 0) {
         console.log(`Found ${expiredTokens.length} expired tokens`);
         for (const token of expiredTokens) {
-          await this.prisma.tokens.delete({
+          await this.database.tokens.delete({
             where: {
               id: token.id,
             },

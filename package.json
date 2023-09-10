@@ -9,6 +9,9 @@
     "node": "18.x"
   },
   "scripts": {
+    "db:dev:rm": "docker compose rm dev-db -s -f -v",
+    "db:dev:up": "docker compose up dev-db -d",
+    "db:dev:restart": "npm run db:dev:rm && npm run db:dev:up && sleep 2 && npm run prisma:dev:deploy",
     "build": "npx prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -33,8 +36,9 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^3.0.2",
     "@prisma/client": "^5.2.0",
+    "@types/bcrypt": "^5.0.0",
     "@types/cron": "^2.4.0",
-    "bcrypt": "^5.1.0",
+    "bcrypt": "^5.1.1",
     "cache-manager": "^5.2.3",
     "cache-manager-ioredis": "^2.1.0",
     "class-transformer": "^0.5.1",
