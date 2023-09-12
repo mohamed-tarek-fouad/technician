@@ -36,7 +36,7 @@ export class CreateUserDto {
   password: string;
   @IsString()
   @IsNotEmpty()
-  @IsPhoneNumber()
+  // @IsPhoneNumber()
   phoneNumber: string;
 
   @IsNotEmpty()

@@ -9,7 +9,8 @@ import { JwtModule } from '@nestjs/jwt/dist';
 import { PrismaService } from './../prisma.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
-
+import * as dotenv from 'dotenv';
+dotenv.config();
 @Module({
   imports: [
     ScheduleModule.forRoot(),

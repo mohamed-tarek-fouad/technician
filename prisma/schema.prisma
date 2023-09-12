@@ -26,18 +26,18 @@ model Users {
 
 model Techncian {
   nationalId              String      @id     @map("_id")
-  user_id                 Int         @unique
+  userId                  Int         @unique
   fullName                String
   jobTitle                String
   idImage                 String
-  user                    Users       @relation(fields: [user_id], references: [id])
+  user                    Users       @relation(fields: [userId], references: [id])
 }
 
 model tokens {
   id                      Int         @id @default(autoincrement())
-  user_id                 Int         @unique
+  userId                 Int         @unique
   expiresAt               DateTime
-  user                    Users       @relation(fields: [user_id], references: [id])
+  user                    Users       @relation(fields: [userId], references: [id])
 }
 
 enum UserRole {

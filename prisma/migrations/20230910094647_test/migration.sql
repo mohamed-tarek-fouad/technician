@@ -22,7 +22,7 @@ CREATE TABLE "Users" (
 -- CreateTable
 CREATE TABLE "Techncian" (
     "_id" TEXT NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
     "fullName" TEXT NOT NULL,
     "jobTitle" TEXT NOT NULL,
     "idImage" TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE "Techncian" (
 -- CreateTable
 CREATE TABLE "tokens" (
     "id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "tokens_pkey" PRIMARY KEY ("id")
@@ -46,13 +46,13 @@ CREATE UNIQUE INDEX "Users_email_key" ON "Users"("email");
 CREATE UNIQUE INDEX "Users_phoneNumber_key" ON "Users"("phoneNumber");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Techncian_user_id_key" ON "Techncian"("user_id");
+CREATE UNIQUE INDEX "Techncian_userId_key" ON "Techncian"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tokens_user_id_key" ON "tokens"("user_id");
+CREATE UNIQUE INDEX "tokens_userId_key" ON "tokens"("userId");
 
 -- AddForeignKey
-ALTER TABLE "Techncian" ADD CONSTRAINT "Techncian_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Techncian" ADD CONSTRAINT "Techncian_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tokens" ADD CONSTRAINT "tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tokens" ADD CONSTRAINT "tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -13,13 +13,13 @@ import { AuthGuard } from '@nestjs/passport/dist';
 import { JwtAuthGuard } from 'src/jwtAuthGuard';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dtos/createUser.dto';
-// import { ForgetPasswordDto } from './dtos/forgetPassword.dto';
-// import { ResetPasswordDto } from './dtos/resetPassword.dto';
-// import { Patch } from '@nestjs/common';
-// import { UpdateUserDto } from './dtos/updateUser.dto';
+import { ForgetPasswordDto } from './dtos/forgetPassword.dto';
+import { ResetPasswordDto } from './dtos/resetPassword.dto';
+import { Patch } from '@nestjs/common';
+import { UpdateUserDto } from './dtos/updateUser.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreateTechDto } from './dtos/createTech.dto';
-// import { VerifyPhoneNumberDto } from './dtos/verifyPhoneNumber.dto';
+import { VerifyPhoneNumberDto } from './dtos/verifyPhoneNumber.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

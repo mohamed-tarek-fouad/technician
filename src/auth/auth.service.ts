@@ -20,7 +20,7 @@ import { DatabaseService } from 'src/database/database.service';
 @Injectable()
 export class AuthService {
   constructor(
-    private jwtServise: JwtService,
+    private jwtService: JwtService,
     private database: DatabaseService,
     private mailerService: MailerService,
     private config: ConfigService,
@@ -64,7 +64,7 @@ export class AuthService {
     try {
       const token = await this.database.tokens.create({
         data: {
-          user_id: user.id,
+          userId: user.id,
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
         },
       });
@@ -78,7 +78,7 @@ export class AuthService {
         message: 'loged in successfully',
         ...tech,
         ...user,
-        access_token: this.jwtServise.sign({
+        access_token: this.jwtService.sign({
           user: { userId: user.id, role: user.role, tokenId: token.id },
         }),
       };
@@ -102,7 +102,7 @@ export class AuthService {
     });
     const token = await this.database.tokens.create({
       data: {
-        user_id: user.id,
+        userId: user.id,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
@@ -110,7 +110,7 @@ export class AuthService {
     delete user.password;
     return {
       ...user,
-      access_token: this.jwtServise.sign({
+      access_token: this.jwtService.sign({
         user: { userId: user.id, role: user.role, tokenId: token.id },
       }),
       message: 'user has been created successfully',
@@ -124,7 +124,10 @@ export class AuthService {
       );
     const userExist = await this.database.users.findFirst({
       where: {
-        OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
+        OR: [
+          { email: techDto.email }, 
+          { phoneNumber: techDto.phoneNumber }
+        ],
       },
     });
     if (userExist) {
@@ -149,13 +152,13 @@ export class AuthService {
         fullName: techDto.fullName,
         jobTitle: techDto.jobTitle,
         nationalId: techDto.nationalId,
-        user_id: user.id,
+        userId: user.id,
         idImage: url,
       },
     });
     const token = await this.database.tokens.create({
       data: {
-        user_id: user.id,
+        userId: user.id,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
@@ -165,7 +168,7 @@ export class AuthService {
     return {
       ...user,
       ...tech,
-      access_token: this.jwtServise.sign({
+      access_token: this.jwtService.sign({
         user: { userId: user.id, role: user.role, tokenId: token.id },
       }),
       message: 'user has been created successfully',
@@ -222,7 +225,7 @@ export class AuthService {
   //     const fourDigits = Math.floor(Math.random() * 9000) + 1000;
 
   //     const secret = process.env.ACCESS_SECRET;
-  //     const token = this.jwtServise.sign(
+  //     const token = this.jwtService.sign(
   //       { code: fourDigits },
   //       {
   //         secret,
@@ -259,7 +262,7 @@ export class AuthService {
   //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
   //     });
   //     const secret = process.env.ACCESS_SECRET;
-  //     const payload = await this.jwtServise.verify(
+  //     const payload = await this.jwtService.verify(
   //       user.phoneNumberVerifiaction,
   //       {
   //         secret,
@@ -279,7 +282,7 @@ export class AuthService {
   //       where: { phoneNumber: resetPasswordDto.phoneNumber },
   //     });
   //     const secret = process.env.ACCESS_SECRET;
-  //     const payload = await this.jwtServise.verify(
+  //     const payload = await this.jwtService.verify(
   //       user.phoneNumberVerifiaction,
   //       {
   //         secret,
