@@ -72,8 +72,8 @@ export class AuthController {
     return this.authService.resetPassword(resetPasswordDto, token);
   }
 //------------------------------------------------------------
-  // @Patch(':id')
-  // updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-  //   return this.authService.updateUser(id, updateUserDto);
-  // }
+  @Patch(':id')
+  updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.authService.updateUser(+id, updateUserDto);
+  }
 }

@@ -238,7 +238,7 @@ export class AuthService {
       try {
         await client.messages.create({
           body: `Verification Code Is : ${fourDigits}`,
-          from: process.env.TWILLIO_NUMBER,
+          from: process.env.TWILIO_NUMBER,
           to: user.phoneNumber,
         });
       } catch (err) {
@@ -305,26 +305,26 @@ export class AuthService {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
-  // async updateUser(id: string, updateUserDto: UpdateUserDto) {
-  //   try {
-  //     const user = await this.database.users.findUnique({
-  //       where: {
-  //         id,
-  //       },
-  //     });
-  //     if (!user) {
-  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-  //     }
-  //     const updatedUser = await this.database.users.update({
-  //       where: { id },
-  //       data: updateUserDto,
-  //     });
-  //     delete updatedUser.password;
-  //     return { ...updatedUser, message: 'user updated successfully' };
-  //   } catch (err) {
-  //     return err;
-  //   }
-  // }
+  async updateUser(id: number, updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.database.users.findUnique({
+        where: {
+          id,
+        },
+      });
+      if (!user) {
+        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+      }
+      const updatedUser = await this.database.users.update({
+        where: { id },
+        data: updateUserDto,
+      });
+      delete updatedUser.password;
+      return { ...updatedUser, message: 'user updated successfully' };
+    } catch (err) {
+      return err;
+    }
+  }
 
   @Cron(CronExpression.EVERY_HOUR)
   async deleteExpiredTokens() {
