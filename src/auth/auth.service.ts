@@ -207,107 +207,104 @@ export class AuthService {
     }
   }
 
-  // async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
-  //   try {
-  //     const user = await this.database.users.findUnique({
-  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-  //     });
-  //     if (!user) {
-  //       throw new HttpException(
-  //         `no user with this phoneNUmber `,
-  //         HttpStatus.BAD_REQUEST,
-  //       );
-  //     }
-  //     const client = new Twilio(
-  //       this.config.get<string>('TWILIO_ACCOUNT_SID'),
-  //       this.config.get<string>('TWILIO_AUTHTOKEN'),
-  //     );
-  //     const fourDigits = Math.floor(Math.random() * 9000) + 1000;
+  async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
+    try {
+      const user = await this.database.users.findUnique({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+      });
+      if (!user) {
+        throw new HttpException(
+          `no user with this phoneNUmber `,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const client = new Twilio(process.env.TWILIO_ACCOUNT_SID,process.env.TWILIO_AUTHTOKEN);
+      const fourDigits = Math.floor(Math.random() * 9000) + 1000;
 
-  //     const secret = process.env.ACCESS_SECRET;
-  //     const token = this.jwtService.sign(
-  //       { code: fourDigits },
-  //       {
-  //         secret,
-  //         expiresIn: 60 * 15,
-  //       },
-  //     );
-  //     await this.database.users.update({
-  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-  //       data: {
-  //         phoneNumberVerifiaction: token,
-  //       },
-  //     });
-  //     try {
-  //       await client.messages.create({
-  //         body: `Verification Code Is : ${fourDigits}`,
-  //         from: this.config.get<string>('TWILIO_NUMBER'),
-  //         to: user.phoneNumber,
-  //       });
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //     return { message: 'verification code sent successfully' };
-  //   } catch (err) {
-  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
+      const secret = process.env.ACCESS_SECRET;
+      const token = this.jwtService.sign(
+        { code: fourDigits },
+        {
+          secret,
+          expiresIn: 60 * 15,
+        },
+      );
+      await this.database.users.update({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+        data: {
+          phoneNumberVerifiaction: token,
+        },
+      });
+      try {
+        await client.messages.create({
+          body: `Verification Code Is : ${fourDigits}`,
+          from: process.env.TWILLIO_NUMBER,
+          to: user.phoneNumber,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      return { message: 'verification code sent successfully' };
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
 
-  // async verifyResetPassword(
-  //   verifyPhoneNumber: VerifyPhoneNumberDto,
-  //   token: string,
-  // ) {
-  //   try {
-  //     const user = await this.database.users.findUnique({
-  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-  //     });
-  //     const secret = process.env.ACCESS_SECRET;
-  //     const payload = await this.jwtService.verify(
-  //       user.phoneNumberVerifiaction,
-  //       {
-  //         secret,
-  //       },
-  //     );
-  //     if (payload.code != token) {
-  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-  //     }
-  //     return { message: 'valid numbers reset password now' };
-  //   } catch (err) {
-  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
-  // async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
-  //   try {
-  //     const user = await this.database.users.findFirst({
-  //       where: { phoneNumber: resetPasswordDto.phoneNumber },
-  //     });
-  //     const secret = process.env.ACCESS_SECRET;
-  //     const payload = await this.jwtService.verify(
-  //       user.phoneNumberVerifiaction,
-  //       {
-  //         secret,
-  //       },
-  //     );
-  //     if (payload.code != token) {
-  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-  //     }
-  //     const saltOrRounds = 10;
-  //     resetPasswordDto.password = await bcrypt.hash(
-  //       resetPasswordDto.password,
-  //       saltOrRounds,
-  //     );
-  //     const updatedUser = await this.database.users.update({
-  //       where: { phoneNumber: resetPasswordDto.phoneNumber },
-  //       data: {
-  //         password: resetPasswordDto.password,
-  //       },
-  //     });
-  //     delete user.password;
-  //     return { ...updatedUser, message: 'reset password successfully' };
-  //   } catch (err) {
-  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
+  async verifyResetPassword(
+    verifyPhoneNumber: VerifyPhoneNumberDto,
+    token: string,
+  ) {
+    try {
+      const user = await this.database.users.findUnique({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+      });
+      const secret = process.env.ACCESS_SECRET;
+      const payload = await this.jwtService.verify(
+        user.phoneNumberVerifiaction,
+        {
+          secret,
+        },
+      );
+      if (payload.code != token) {
+        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+      }
+      return { message: 'valid numbers reset password now' };
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
+    try {
+      const user = await this.database.users.findFirst({
+        where: { phoneNumber: resetPasswordDto.phoneNumber },
+      });
+      const secret = process.env.ACCESS_SECRET;
+      const payload = await this.jwtService.verify(
+        user.phoneNumberVerifiaction,
+        {
+          secret,
+        },
+      );
+      if (payload.code != token) {
+        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+      }
+      const saltOrRounds = 10;
+      resetPasswordDto.password = await bcrypt.hash(
+        resetPasswordDto.password,
+        saltOrRounds,
+      );
+      const updatedUser = await this.database.users.update({
+        where: { phoneNumber: resetPasswordDto.phoneNumber },
+        data: {
+          password: resetPasswordDto.password,
+        },
+      });
+      delete user.password;
+      return { ...updatedUser, message: 'reset password successfully' };
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
   // async updateUser(id: string, updateUserDto: UpdateUserDto) {
   //   try {
   //     const user = await this.database.users.findUnique({

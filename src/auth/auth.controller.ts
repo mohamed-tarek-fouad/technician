@@ -52,25 +52,26 @@ export class AuthController {
   logout(@Req() req) {
     return this.authService.logout(req);
   }
-  // @Post('verifyPhoneNumber')
-  // verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
-  //   return this.authService.verifyPhoneNumber(verifyPhoneNumber);
-  // }
-  // @Post('verifyResetPassword/:token')
-  // verifyResetPassword(
-  //   verifyPhoneNumber: VerifyPhoneNumberDto,
-  //   @Param('token') token: string,
-  // ) {
-  //   return this.authService.verifyResetPassword(verifyPhoneNumber, token);
-  // }
-  // @Post(' resetPassword/:token')
-  // resetPassword(
-  //   resetPasswordDto: ResetPasswordDto,
-  //   @Param('token') token: string,
-  // ) {
-  //   return this.authService.resetPassword(resetPasswordDto, token);
-  // }
-
+  //---------------password reset routes----------------------
+  @Post('verifyPhoneNumber')
+  verifyPhoneNumber(@Body() verifyPhoneNumber: VerifyPhoneNumberDto) {
+    return this.authService.verifyPhoneNumber(verifyPhoneNumber);
+  }
+  @Post('verifyResetPassword/:token')
+  verifyResetPassword(
+    @Body() verifyPhoneNumber: VerifyPhoneNumberDto,
+    @Param('token') token: string,
+  ) {
+    return this.authService.verifyResetPassword(verifyPhoneNumber, token);
+  }
+  @Post('resetPassword/:token')
+  resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @Param('token') token: string,
+  ) {
+    return this.authService.resetPassword(resetPasswordDto, token);
+  }
+//------------------------------------------------------------
   // @Patch(':id')
   // updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
   //   return this.authService.updateUser(id, updateUserDto);
