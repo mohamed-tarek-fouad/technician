@@ -98,3 +98,69 @@
 | Body Parameter | Type     | 
 | :-------- | :------- | 
 | `message`       | `string` | 
+
+#### Forget password
+```http
+  POST /api/auth/verifyPhoneNumber
+```
+| Body Parameter |   Type   | Description                |
+| :------------- | :------- | :------------------------- |
+| `phoneNumber`  | `string` | **Required** |
+### Response 
+| Body Parameter | Type     | 
+| :------------- | :------- | 
+| `message`      | `string` | 
+```http
+  POST /api/auth/verifyResetPassword/{token}
+```
+| Body Parameter |   Type   | Description                |
+| :------------- | :------- | :------------------------- |
+| `phoneNumber`  | `string` | **Required** |
+| `token`        | `string` | **Required** |
+### Response 
+| Body Parameter | Type     | 
+| :------------- | :------- | 
+| `message`      | `string` | 
+```http
+  POST /api/auth/resetPassword/{token}
+```
+| Body Parameter |   Type   | Description                |
+| :------------- | :------- | :------------------------- |
+| `password`     | `string` | **Required** |
+| `token`        | `string` | **Required** |
+### Response 
+| Body Parameter | Type     | 
+| :------------- | :------- | 
+| `email`        | `string` | 
+| `username`     | `string` | 
+| `phoneNumber`  | `string` | 
+| `government`   | `string` | 
+| `gender`       | `string` | 
+| `role`         | `string` | 
+| `message`      | `string` | 
+
+
+#### update user
+```http
+  PATCH /api/auth/{id}
+```
+
+| Body Parameter | Type     | Description                |
+| :------------- | :------- | :------------------------- |
+| `email`        | `string` | **Required** **Unique** must be valid email m@gmail.com|
+| `username`     | `string` | **Required** |
+| `password`     | `string` | **Required** must have lowecase,uppercase,nums,special chracters and more than 8 |
+| `phoneNumber`  | `string` | **Required** **Unique**  must be valid phoneNumber starts with +20 |
+| `government`   | `string` | **Required** |
+| `gender`       | `string` | **Required** male or female |
+
+### Response 
+| Body Parameter | Type     | 
+| :------------- | :------- | 
+| `email`        | `string` | 
+| `username`     | `string` | 
+| `phoneNumber`  | `string` | 
+| `government`   | `string` | 
+| `gender`       | `string` | 
+| `role`         | `string` | 
+| `message`      | `string` | 

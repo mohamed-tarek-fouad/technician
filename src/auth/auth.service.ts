@@ -16,11 +16,12 @@ import { CreateTechDto } from './dtos/createTech.dto';
 import { Twilio } from 'twilio';
 import { ConfigService } from '@nestjs/config';
 import { VerifyPhoneNumberDto } from './dtos/verifyPhoneNumber.dto';
+import { DatabaseService } from 'src/database/database.service';
 @Injectable()
 export class AuthService {
   constructor(
-    private jwtServise: JwtService,
-    private prisma: PrismaService,
+    private jwtService: JwtService,
+    private database: DatabaseService,
     private mailerService: MailerService,
     private config: ConfigService,
   ) {
@@ -32,7 +33,7 @@ export class AuthService {
   }
   async validateUser(email: string, password: string) {
     try {
-      const user = await this.prisma.users.findFirst({
+      const user = await this.database.users.findFirst({
         where: { OR: [{ email }, { phoneNumber: email }] },
         include: { techncian: true },
       });
@@ -47,9 +48,9 @@ export class AuthService {
       return err;
     }
   }
-  async validateToken(id: string) {
+  async validateToken(id: number) {
     try {
-      const token = await this.prisma.tokens.findUnique({
+      const token = await this.database.tokens.findUnique({
         where: {
           id,
         },
@@ -61,7 +62,7 @@ export class AuthService {
   }
   async login(user: any): Promise<any> {
     try {
-      const token = await this.prisma.tokens.create({
+      const token = await this.database.tokens.create({
         data: {
           userId: user.id,
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
@@ -77,7 +78,7 @@ export class AuthService {
         message: 'loged in successfully',
         ...tech,
         ...user,
-        access_token: this.jwtServise.sign({
+        access_token: this.jwtService.sign({
           user: { userId: user.id, role: user.role, tokenId: token.id },
         }),
       };
@@ -86,7 +87,7 @@ export class AuthService {
     }
   }
   async clientRegister(userDto: CreateUserDto) {
-    const userExist = await this.prisma.users.findFirst({
+    const userExist = await this.database.users.findFirst({
       where: {
         OR: [{ email: userDto.email }, { phoneNumber: userDto.phoneNumber }],
       },
@@ -96,10 +97,10 @@ export class AuthService {
     }
     const saltOrRounds = 10;
     userDto.password = await bcrypt.hash(userDto.password, saltOrRounds);
-    const user = await this.prisma.users.create({
+    const user = await this.database.users.create({
       data: userDto,
     });
-    const token = await this.prisma.tokens.create({
+    const token = await this.database.tokens.create({
       data: {
         userId: user.id,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
@@ -109,7 +110,7 @@ export class AuthService {
     delete user.password;
     return {
       ...user,
-      access_token: this.jwtServise.sign({
+      access_token: this.jwtService.sign({
         user: { userId: user.id, role: user.role, tokenId: token.id },
       }),
       message: 'user has been created successfully',
@@ -121,9 +122,12 @@ export class AuthService {
         'national Id image is required',
         HttpStatus.BAD_REQUEST,
       );
-    const userExist = await this.prisma.users.findFirst({
+    const userExist = await this.database.users.findFirst({
       where: {
-        OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
+        OR: [
+          { email: techDto.email }, 
+          { phoneNumber: techDto.phoneNumber }
+        ],
       },
     });
     if (userExist) {
@@ -131,7 +135,7 @@ export class AuthService {
     }
     const saltOrRounds = 10;
     techDto.password = await bcrypt.hash(techDto.password, saltOrRounds);
-    const user = await this.prisma.users.create({
+    const user = await this.database.users.create({
       data: {
         email: techDto.email,
         gender: techDto.gender,
@@ -143,7 +147,7 @@ export class AuthService {
     });
     const url = await this.uploadImage(images[0].buffer);
 
-    const tech = await this.prisma.techncian.create({
+    const tech = await this.database.techncian.create({
       data: {
         fullName: techDto.fullName,
         jobTitle: techDto.jobTitle,
@@ -152,7 +156,7 @@ export class AuthService {
         idImage: url,
       },
     });
-    const token = await this.prisma.tokens.create({
+    const token = await this.database.tokens.create({
       data: {
         userId: user.id,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
@@ -164,7 +168,7 @@ export class AuthService {
     return {
       ...user,
       ...tech,
-      access_token: this.jwtServise.sign({
+      access_token: this.jwtService.sign({
         user: { userId: user.id, role: user.role, tokenId: token.id },
       }),
       message: 'user has been created successfully',
@@ -192,7 +196,7 @@ export class AuthService {
   }
   async logout(req) {
     try {
-      await this.prisma.tokens.delete({
+      await this.database.tokens.delete({
         where: {
           id: req.user.tokenId,
         },
@@ -203,133 +207,130 @@ export class AuthService {
     }
   }
 
-  // async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
-  //   try {
-  //     const user = await this.prisma.users.findUnique({
-  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-  //     });
-  //     if (!user) {
-  //       throw new HttpException(
-  //         `no user with this phoneNUmber `,
-  //         HttpStatus.BAD_REQUEST,
-  //       );
-  //     }
-  //     const client = new Twilio(
-  //       this.config.get<string>('TWILIO_ACCOUNT_SID'),
-  //       this.config.get<string>('TWILIO_AUTHTOKEN'),
-  //     );
-  //     const fourDigits = Math.floor(Math.random() * 9000) + 1000;
+  async verifyPhoneNumber(verifyPhoneNumber: VerifyPhoneNumberDto) {
+    try {
+      const user = await this.database.users.findUnique({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+      });
+      if (!user) {
+        throw new HttpException(
+          `no user with this phoneNUmber `,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const client = new Twilio(process.env.TWILIO_ACCOUNT_SID,process.env.TWILIO_AUTHTOKEN);
+      const fourDigits = Math.floor(Math.random() * 9000) + 1000;
 
-  //     const secret = process.env.ACCESS_SECRET;
-  //     const token = this.jwtServise.sign(
-  //       { code: fourDigits },
-  //       {
-  //         secret,
-  //         expiresIn: 60 * 15,
-  //       },
-  //     );
-  //     await this.prisma.users.update({
-  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-  //       data: {
-  //         phoneNumberVerifiaction: token,
-  //       },
-  //     });
-  //     try {
-  //       await client.messages.create({
-  //         body: `Verification Code Is : ${fourDigits}`,
-  //         from: this.config.get<string>('TWILIO_NUMBER'),
-  //         to: user.phoneNumber,
-  //       });
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //     return { message: 'verification code sent successfully' };
-  //   } catch (err) {
-  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
+      const secret = process.env.ACCESS_SECRET;
+      const token = this.jwtService.sign(
+        { code: fourDigits },
+        {
+          secret,
+          expiresIn: 60 * 15,
+        },
+      );
+      await this.database.users.update({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+        data: {
+          phoneNumberVerifiaction: token,
+        },
+      });
+      try {
+        await client.messages.create({
+          body: `Verification Code Is : ${fourDigits}`,
+          from: process.env.TWILIO_NUMBER,
+          to: user.phoneNumber,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      return { message: 'verification code sent successfully' };
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
 
-  // async verifyResetPassword(
-  //   verifyPhoneNumber: VerifyPhoneNumberDto,
-  //   token: string,
-  // ) {
-  //   try {
-  //     const user = await this.prisma.users.findUnique({
-  //       where: { phoneNumber: verifyPhoneNumber.phoneNumber },
-  //     });
-  //     const secret = process.env.ACCESS_SECRET;
-  //     const payload = await this.jwtServise.verify(
-  //       user.phoneNumberVerifiaction,
-  //       {
-  //         secret,
-  //       },
-  //     );
-  //     if (payload.code != token) {
-  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-  //     }
-  //     return { message: 'valid numbers reset password now' };
-  //   } catch (err) {
-  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
-  // async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
-  //   try {
-  //     const user = await this.prisma.users.findFirst({
-  //       where: { phoneNumber: resetPasswordDto.phoneNumber },
-  //     });
-  //     const secret = process.env.ACCESS_SECRET;
-  //     const payload = await this.jwtServise.verify(
-  //       user.phoneNumberVerifiaction,
-  //       {
-  //         secret,
-  //       },
-  //     );
-  //     if (payload.code != token) {
-  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-  //     }
-  //     const saltOrRounds = 10;
-  //     resetPasswordDto.password = await bcrypt.hash(
-  //       resetPasswordDto.password,
-  //       saltOrRounds,
-  //     );
-  //     const updatedUser = await this.prisma.users.update({
-  //       where: { phoneNumber: resetPasswordDto.phoneNumber },
-  //       data: {
-  //         password: resetPasswordDto.password,
-  //       },
-  //     });
-  //     delete user.password;
-  //     return { ...updatedUser, message: 'reset password successfully' };
-  //   } catch (err) {
-  //     throw new HttpException(err, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
-  // async updateUser(id: string, updateUserDto: UpdateUserDto) {
-  //   try {
-  //     const user = await this.prisma.users.findUnique({
-  //       where: {
-  //         id,
-  //       },
-  //     });
-  //     if (!user) {
-  //       throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
-  //     }
-  //     const updatedUser = await this.prisma.users.update({
-  //       where: { id },
-  //       data: updateUserDto,
-  //     });
-  //     delete updatedUser.password;
-  //     return { ...updatedUser, message: 'user updated successfully' };
-  //   } catch (err) {
-  //     return err;
-  //   }
-  // }
+  async verifyResetPassword(
+    verifyPhoneNumber: VerifyPhoneNumberDto,
+    token: string,
+  ) {
+    try {
+      const user = await this.database.users.findUnique({
+        where: { phoneNumber: verifyPhoneNumber.phoneNumber },
+      });
+      const secret = process.env.ACCESS_SECRET;
+      const payload = await this.jwtService.verify(
+        user.phoneNumberVerifiaction,
+        {
+          secret,
+        },
+      );
+      if (payload.code != token) {
+        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+      }
+      return { message: 'valid numbers reset password now' };
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async resetPassword(resetPasswordDto: ResetPasswordDto, token: string) {
+    try {
+      const user = await this.database.users.findFirst({
+        where: { phoneNumber: resetPasswordDto.phoneNumber },
+      });
+      const secret = process.env.ACCESS_SECRET;
+      const payload = await this.jwtService.verify(
+        user.phoneNumberVerifiaction,
+        {
+          secret,
+        },
+      );
+      if (payload.code != token) {
+        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+      }
+      const saltOrRounds = 10;
+      resetPasswordDto.password = await bcrypt.hash(
+        resetPasswordDto.password,
+        saltOrRounds,
+      );
+      const updatedUser = await this.database.users.update({
+        where: { phoneNumber: resetPasswordDto.phoneNumber },
+        data: {
+          password: resetPasswordDto.password,
+        },
+      });
+      delete user.password;
+      return { ...updatedUser, message: 'reset password successfully' };
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async updateUser(id: number, updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.database.users.findUnique({
+        where: {
+          id,
+        },
+      });
+      if (!user) {
+        throw new HttpException("user doesn't exist", HttpStatus.BAD_REQUEST);
+      }
+      const updatedUser = await this.database.users.update({
+        where: { id },
+        data: updateUserDto,
+      });
+      delete updatedUser.password;
+      return { ...updatedUser, message: 'user updated successfully' };
+    } catch (err) {
+      return err;
+    }
+  }
 
   @Cron(CronExpression.EVERY_HOUR)
   async deleteExpiredTokens() {
     try {
       console.log('Checking for expired tokens...');
-      const expiredTokens = await this.prisma.tokens.findMany({
+      const expiredTokens = await this.database.tokens.findMany({
         where: {
           expiresAt: {
             lte: new Date(),
@@ -339,7 +340,7 @@ export class AuthService {
       if (expiredTokens.length > 0) {
         console.log(`Found ${expiredTokens.length} expired tokens`);
         for (const token of expiredTokens) {
-          await this.prisma.tokens.delete({
+          await this.database.tokens.delete({
             where: {
               id: token.id,
             },

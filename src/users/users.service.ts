@@ -1,11 +1,11 @@
-import { PrismaService } from '../prisma.service';
+import { DatabaseService } from 'src/database/database.service';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private database: DatabaseService) {}
   async allUsers() {
     try {
-      const users = await this.prisma.users.findMany({});
+      const users = await this.database.users.findMany({});
       if (users.length === 0) {
         throw new HttpException("user does'nt exist", HttpStatus.BAD_REQUEST);
       }
@@ -16,9 +16,9 @@ export class UsersService {
     }
   }
 
-  async userById(id: string) {
+  async userById(id: number) {
     try {
-      const userFound = await this.prisma.users.findUnique({
+      const userFound = await this.database.users.findUnique({
         where: {
           id,
         },

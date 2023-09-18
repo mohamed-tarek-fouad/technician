@@ -1,13 +1,15 @@
-import { AuthModule } from './auth/auth.module';
 import { Module } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './jwtAuthGuard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DatabaseModule } from './database/database.module';
 @Module({
   imports: [
     AuthModule,
     UsersModule,
+    DatabaseModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => ({
