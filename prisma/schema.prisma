@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Users {
@@ -25,19 +26,19 @@ model Users {
 }
 
 model Techncian {
-  nationalId              String      @id     @map("_id")
-  userId                  Int         @unique
-  fullName                String
-  jobTitle                String
-  idImage                 String
-  user                    Users       @relation(fields: [userId], references: [id])
+  nationalId String @id @map("_id")
+  userId     Int    @unique
+  fullName   String
+  jobTitle   String
+  idImage    String
+  user       Users  @relation(fields: [userId], references: [id])
 }
 
 model tokens {
-  id                      Int         @id @default(autoincrement())
-  userId                 Int         @unique
-  expiresAt               DateTime
-  user                    Users       @relation(fields: [userId], references: [id])
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  expiresAt DateTime
+  user      Users    @relation(fields: [userId], references: [id])
 }
 
 enum UserRole {
