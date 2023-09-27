@@ -117,11 +117,12 @@ export class AuthService {
     };
   }
   async techRegister(techDto: CreateTechDto, images) {
-    if (!images[0])
+    if (!images[0]){
       throw new HttpException(
         'national Id image is required',
         HttpStatus.BAD_REQUEST,
       );
+    }
     const userExist = await this.database.users.findFirst({
       where: {
         OR: [

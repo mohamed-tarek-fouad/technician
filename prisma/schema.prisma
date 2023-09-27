@@ -22,6 +22,7 @@ model Users {
   tokens                  tokens[]
   role                    UserRole    @default(user)
   techncian               Techncian[]
+  booking                 Booking[]
 }
 
 model Techncian {
@@ -30,16 +31,24 @@ model Techncian {
   fullName                String
   jobTitle                String
   idImage                 String
+  booking                 Booking[]
   user                    Users       @relation(fields: [userId], references: [id])
 }
 
 model tokens {
   id                      Int         @id @default(autoincrement())
-  userId                 Int         @unique
+  userId                  Int         @unique
   expiresAt               DateTime
   user                    Users       @relation(fields: [userId], references: [id])
 }
-
+model Booking {
+  id                      Int         @id @default(autoincrement())
+  userId                  Int         
+  TechnecianId            Int  
+  date                    DateTime    @default(now())
+  user                    Users       @relation(fields: [userId], references: [id])
+  technecian              Techncian   @relation(fields: [TechnecianId], references: [userId])
+}
 enum UserRole {
   user
   admin
