@@ -3,7 +3,7 @@
 
 #### root uri
 ```http
- https://tech-o6js.onrender.com/
+ https://technicans.mooo.com:3000
 ```
 #### Register Client
 ```http

@@ -8,7 +8,6 @@ import * as bcrypt from 'bcrypt';
 import { HttpException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer/dist';
-import { ForgetPasswordDto } from './dtos/forgetPassword.dto';
 import { ResetPasswordDto } from './dtos/resetPassword.dto';
 import { v2 as cloudinary } from 'cloudinary';
 import { UpdateUserDto } from './dtos/updateUser.dto';
@@ -125,10 +124,7 @@ export class AuthService {
     }
     const userExist = await this.database.users.findFirst({
       where: {
-        OR: [
-          { email: techDto.email }, 
-          { phoneNumber: techDto.phoneNumber }
-        ],
+        OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],
       },
     });
     if (userExist) {
@@ -219,7 +215,10 @@ export class AuthService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const client = new Twilio(process.env.TWILIO_ACCOUNT_SID,process.env.TWILIO_AUTHTOKEN);
+      const client = new Twilio(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTHTOKEN,
+      );
       const fourDigits = Math.floor(Math.random() * 9000) + 1000;
 
       const secret = process.env.ACCESS_SECRET;
