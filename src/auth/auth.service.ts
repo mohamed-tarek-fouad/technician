@@ -2,7 +2,6 @@
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from './../prisma.service';
 import { CreateUserDto } from './dtos/createUser.dto';
 import * as bcrypt from 'bcrypt';
 import { HttpException } from '@nestjs/common';
