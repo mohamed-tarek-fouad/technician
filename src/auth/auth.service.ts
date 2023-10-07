@@ -2,7 +2,6 @@
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from './../prisma.service';
 import { CreateUserDto } from './dtos/createUser.dto';
 import * as bcrypt from 'bcrypt';
 import { HttpException } from '@nestjs/common';
@@ -116,11 +115,12 @@ export class AuthService {
     };
   }
   async techRegister(techDto: CreateTechDto, images) {
-    if (!images[0])
+    if (!images[0]){
       throw new HttpException(
         'national Id image is required',
         HttpStatus.BAD_REQUEST,
       );
+    }
     const userExist = await this.database.users.findFirst({
       where: {
         OR: [{ email: techDto.email }, { phoneNumber: techDto.phoneNumber }],

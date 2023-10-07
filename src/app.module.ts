@@ -5,6 +5,7 @@ import { JwtAuthGuard } from './jwtAuthGuard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
+import { BookingModule } from './booking/booking.module';
 @Module({
   imports: [
     AuthModule,
@@ -25,6 +26,7 @@ import { DatabaseModule } from './database/database.module';
       inject: [ConfigService],
     }),
     ConfigModule.forRoot(),
+    BookingModule,
   ],
 
   controllers: [],

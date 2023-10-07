@@ -32,6 +32,7 @@ export class AuthController {
   clientRegister(@Body() createUserDto: CreateUserDto) {
     return this.authService.clientRegister(createUserDto);
   }
+  @Post('tech/register')
   @UseInterceptors(
     FilesInterceptor('nationalIdImage', 1, {
       preservePath: true,
@@ -43,9 +44,8 @@ export class AuthController {
       },
     }),
   )
-  @Post('tech/register')
-  register(@Body() techDto: CreateTechDto, @UploadedFiles() images: any) {
-    return this.authService.techRegister(techDto, images);
+  register(@Body() techDto: CreateTechDto, @UploadedFiles() nationalIdImage: any) {
+    return this.authService.techRegister(techDto, nationalIdImage); 
   }
   @UseGuards(JwtAuthGuard)
   @Post('logout')
