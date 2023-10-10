@@ -203,7 +203,7 @@
 | `TechnicianId`| `string` |
 | `date`        | `string` |
 ```http
-  GET /api/booking/cancelBooking/{bookingId}
+  DELETE /api/booking/cancelBooking/{bookingId}
 ```
 | Body Parameter |   Type   | Description                |
 | :------------- | :------- | :------------------------- |
