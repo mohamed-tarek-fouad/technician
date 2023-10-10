@@ -26,9 +26,9 @@ export class BookingController {
     return this.bookingService.findUserAllReservations(request);
   }
   @UseGuards(JwtAuthGuard)
-  @Post('bookTechnecian')
+  @Post('bookTechnician')
   bookTech(@Body() createReservationDto: createReservationDto, @Req() request) {
-    return this.bookingService.reserveTechnecian(createReservationDto, request);
+    return this.bookingService.reserveTechnician(createReservationDto, request);
   }
   @UseGuards(JwtAuthGuard)
   @Delete('cancelBooking/:bookingId')

@@ -33,7 +33,7 @@ export class AuthService {
     try {
       const user = await this.database.users.findFirst({
         where: { OR: [{ email }, { phoneNumber: email }] },
-        include: { techncian: true },
+        include: { technician: true },
       });
       if (user) {
         const isMatch = await bcrypt.compare(password, user.password);
@@ -68,10 +68,10 @@ export class AuthService {
       });
       delete user.id;
       delete user.password;
-      delete user.techncian[0]?.nationalId;
-      delete user.techncian[0]?.userId;
-      const tech = user.techncian[0] ? user.techncian[0] : [];
-      delete user.techncian;
+      delete user.technician[0]?.nationalId;
+      delete user.technician[0]?.userId;
+      const tech = user.technician[0] ? user.technician[0] : [];
+      delete user.technician;
       return {
         message: 'loged in successfully',
         ...tech,
@@ -143,7 +143,7 @@ export class AuthService {
     });
     const url = await this.uploadImage(images[0].buffer);
 
-    const tech = await this.database.techncian.create({
+    const tech = await this.database.technician.create({
       data: {
         fullName: techDto.fullName,
         jobTitle: techDto.jobTitle,

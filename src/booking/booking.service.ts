@@ -6,12 +6,12 @@ import { createReservationDto } from './dto/dto';
 export class BookingService {
   constructor(private database: DatabaseService) {}
   //make reservation
-  async reserveTechnecian(createReservationDto: createReservationDto, request) {
+  async reserveTechnician(createReservationDto: createReservationDto, request) {
     try {
       const newReservation = await this.database.booking.create({
         data: {
           userId: request.user.tokenId,
-          TechnecianId: createReservationDto.technecianId,
+          TechnicianId: createReservationDto.technicianId,
           date: createReservationDto.date,
         },
       });

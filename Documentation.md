@@ -164,3 +164,55 @@
 | `gender`       | `string` | 
 | `role`         | `string` | 
 | `message`      | `string` | 
+----------------------------------------------------------------
+#### reserve a Technician 
+```http
+  POST /api/booking/bookTechnician
+```
+| Body Parameter |   Type   | Description                |
+| :------------- | :------- | :------------------------- |
+| `technicianId` | `number` | **Required** |
+| `date`         | `string` | **Required** |
+### Response 
+| Body Parameter | Type    | 
+| :------------- | :-------|
+| `userId`      | `string` |
+| `TechnicianId`| `string` |
+| `date`        | `string` |
+| `message`     | `string` | 
+```http
+  GET /api/booking/allBookings
+```
+| Body Parameter |   Type   | Description                |
+| :------------- | :------- | :------------------------- |
+### Response 
+| Body Parameter | Type    | 
+| :------------- | :-------|
+| `userId`      | `string` |
+| `TechnicianId`| `string` |
+| `date`        | `string` |
+```http
+  GET /api/booking/myBookings
+```
+| Body Parameter |   Type   | Description                |
+| :------------- | :------- | :------------------------- |
+### Response 
+| Body Parameter | Type    | 
+| :------------- | :-------|
+| `userId`      | `string` |
+| `TechnicianId`| `string` |
+| `date`        | `string` |
+```http
+  GET /api/booking/cancelBooking/{bookingId}
+```
+| Body Parameter |   Type   | Description                |
+| :------------- | :------- | :------------------------- |
+| `bookingId`    | `string` |
+### Response 
+| Body Parameter | Type    | 
+| :------------- | :-------|
+| `userId`      | `string` |
+| `TechnicianId`| `string` |
+| `date`        | `string` |
+| `message`     | `string` | 
+

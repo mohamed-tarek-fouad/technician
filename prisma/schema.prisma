@@ -22,11 +22,11 @@ model Users {
   gender                  Gender
   tokens                  tokens[]
   role                    UserRole    @default(user)
-  techncian               Techncian[]
+  technician               Technician[]
   booking                 Booking[]
 }
 
-model Techncian {
+model Technician {
   nationalId              String      @id     @map("_id")
   userId                  Int         @unique
   fullName                String
@@ -45,10 +45,10 @@ model tokens {
 model Booking {
   id                      Int         @id @default(autoincrement())
   userId                  Int         
-  TechnecianId            Int  
+  TechnicianId            Int  
   date                    DateTime    @default(now())
   user                    Users       @relation(fields: [userId], references: [id])
-  technecian              Techncian   @relation(fields: [TechnecianId], references: [userId])
+  technecian              Technician   @relation(fields: [TechnicianId], references: [userId])
 }
 enum UserRole {
   user
